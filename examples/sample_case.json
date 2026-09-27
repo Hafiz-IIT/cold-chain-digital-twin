@@ -1,0 +1,12 @@
+{
+  "initial_c": 4,
+  "ambient_profile_c": [
+    30,
+    30,
+    32,
+    35,
+    35
+  ],
+  "cooling_c_per_hour": 3,
+  "max_allowed_c": 8
+}
