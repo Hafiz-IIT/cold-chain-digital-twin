@@ -43,3 +43,7 @@ Tests establish qualitative thermal behavior; future work should calibrate again
 
 ## License
 MIT.
+
+## Extended implementation
+
+- `controller.py` adds thermostat control, closed-loop simulation, excursion tracking, and a cooling-energy proxy.
