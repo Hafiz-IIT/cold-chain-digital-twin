@@ -1,16 +1,15 @@
 # Cold Chain Digital Twin
 
-> **A software-only thermal twin for studying temperature drift, cooling control, and excursion risk.**
+> Software-only cold-chain digital twin for temperature drift, active cooling and excursion analysis.
 
-Cold-chain failures are time-dependent: ambient heat, cooling capacity, and duration interact. This repository turns the old cold-chain IoT/logistics idea into a reproducible thermal simulation without pretending real sensors exist.
+## Status
+**Reproducible simulation/research prototype** with tests, CI, architecture, evaluation and roadmap documentation.
 
-## Implemented
-- cold-chain state model
-- first-order ambient thermal drift
-- configurable cooling power
-- discrete time-step simulation
-- temperature excursion tracking
-- maximum-temperature summary
+## Problem
+Cold-chain decisions depend on dynamic interaction between cargo temperature, ambient conditions and cooling. A transparent simulator enables controlled experiments before real IoT integration.
+
+## Architecture
+Initial temperature + ambient profile + first-order thermal dynamics + cooling input → time-step simulation → max-temperature and excursion-duration metrics.
 
 ## Run
 ```bash
@@ -18,17 +17,29 @@ python -m unittest discover -s tests -v
 python cold_chain_digital_twin.py
 ```
 
-## Repository map
-`cold_chain_digital_twin.py` core · `tests/` tests · `examples/` fixtures · `docs/architecture.md` design · `docs/research-agenda.md` experiments · `STATUS.md` claims · `CITATION.cff` citation
-
-## Pipeline
-**initial temperature → ambient profile → thermal drift → cooling → state trajectory → excursion summary**
+## Implemented
+- Cold-chain state model
+- First-order thermal drift
+- Cooling control input
+- Configurable time step
+- Ambient profile simulation
+- Excursion tracking
+- Summary metrics
+- Tests and CI
 
 ## Research lineage
-This repository consolidates the older cold-chain IoT, logistics digital-twin, shipment-monitoring, and predictive-operations themes.
+- *Digital Twins for Healthcare and Wellness Applications*
+- *AI for Climate Change: Modeling Micro-Level Energy Efficiency*
+- *AI in Energy Efficiency Management*
 
-## Evaluation direction
-Sweep ambient profiles, cooling capacity, time step, and thermal rate. Later calibrate only if a legitimate real sensor dataset becomes available.
+## Evaluation
+Tests establish qualitative thermal behavior; future work should calibrate against real sensors and compare control strategies.
 
-## Maturity
-**Research prototype.** This is a simplified simulator, not a calibrated food/pharmaceutical model, regulatory compliance tool, real IoT ingestion system, or hardware digital twin.
+## Limitations
+- Simplified first-order physics
+- No real IoT ingestion
+- No product-specific thermal mass model
+- No compliance certification claim
+
+## License
+MIT.

@@ -1,0 +1,14 @@
+[build-system]
+requires=["setuptools>=68"]
+build-backend="setuptools.build_meta"
+
+[project]
+name="cold-chain-digital-twin"
+version="0.1.0"
+description="Software-only cold-chain digital twin for temperature drift, active cooling and excursion analysis."
+requires-python=">=3.10"
+license={text="MIT"}
+authors=[{name="Syed Hafiz Ali"}]
+
+[tool.setuptools]
+py-modules=["cold_chain_digital_twin"]
