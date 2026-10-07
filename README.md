@@ -1,49 +1,50 @@
 # Cold Chain Digital Twin
 
-> Software-only cold-chain digital twin for temperature drift, active cooling and excursion analysis.
+<p align="center"><strong>Thermal Dynamics Before Physical Deployment</strong><br/><sub>A transparent software-only model of temperature drift, cooling and excursion risk.</sub></p>
 
-## Status
-**Reproducible simulation/research prototype** with tests, CI, architecture, evaluation and roadmap documentation.
+<p align="center"><img src="https://img.shields.io/badge/status-reproducible%20simulation-blue" alt="Simulation"/> <img src="https://img.shields.io/badge/model-first--order%20thermal%20dynamics-orange" alt="Model"/></p>
 
-## Problem
-Cold-chain decisions depend on dynamic interaction between cargo temperature, ambient conditions and cooling. A transparent simulator enables controlled experiments before real IoT integration.
+## Question
 
-## Architecture
-Initial temperature + ambient profile + first-order thermal dynamics + cooling input → time-step simulation → max-temperature and excursion-duration metrics.
+**How do ambient conditions and active cooling change cold-chain excursion behavior over time?**
 
-## Run
-```bash
-python -m unittest discover -s tests -v
-python cold_chain_digital_twin.py
+```
+Initial cargo state
+      +
+Ambient profile
+      +
+Cooling control
+      ↓
+Thermal time-step simulation
+      ↓
+Temperature trajectory
+      ↓
+Excursion duration + energy proxy
 ```
 
+## Try it
+
+```bash
+python cold_chain_digital_twin.py
+python -m unittest discover -s tests -v
+```
+
+`controller.py` adds a closed-loop thermostat experiment so controlled and uncontrolled trajectories can be compared.
+
 ## Implemented
-- Cold-chain state model
-- First-order thermal drift
-- Cooling control input
-- Configurable time step
-- Ambient profile simulation
-- Excursion tracking
-- Summary metrics
-- Tests and CI
 
-## Research lineage
-- *Digital Twins for Healthcare and Wellness Applications*
-- *AI for Climate Change: Modeling Micro-Level Energy Efficiency*
-- *AI in Energy Efficiency Management*
+- cold-chain state model
+- first-order thermal drift
+- ambient profiles
+- configurable timestep
+- cooling input
+- excursion tracking
+- thermostat controller
+- cooling-energy proxy
+- deterministic CI
 
-## Evaluation
-Tests establish qualitative thermal behavior; future work should calibrate against real sensors and compare control strategies.
+## Research boundary
 
-## Limitations
-- Simplified first-order physics
-- No real IoT ingestion
-- No product-specific thermal mass model
-- No compliance certification claim
+Software simulation only. No physical sensor/IoT deployment or validated refrigerated-container model is claimed.
 
-## License
-MIT.
-
-## Extended implementation
-
-- `controller.py` adds thermostat control, closed-loop simulation, excursion tracking, and a cooling-energy proxy.
+Related: [Logistics Optimization Lab](https://github.com/Hafiz-IIT/logistics-optimization-lab) · [Port Operations Simulator](https://github.com/Hafiz-IIT/port-operations-simulator)
