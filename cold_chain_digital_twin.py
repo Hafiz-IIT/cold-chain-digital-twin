@@ -4,14 +4,33 @@ from dataclasses import dataclass
 import math
 
 
+def _finite_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def threshold_excursion_hours(previous_c: float, current_c: float, threshold_c: float, dt_hours: float) -> float:
+    """Linearly interpolate the time above a threshold during one simulation step."""
+    if not all(_finite_number(value) for value in (previous_c, current_c, threshold_c, dt_hours)):
+        raise ValueError("excursion inputs must be finite numbers")
+    if dt_hours <= 0:
+        raise ValueError("dt_hours must be positive")
+    if previous_c > threshold_c and current_c > threshold_c:
+        return dt_hours
+    if previous_c <= threshold_c < current_c:
+        return dt_hours * (current_c - threshold_c) / (current_c - previous_c)
+    if previous_c > threshold_c >= current_c:
+        return dt_hours * (previous_c - threshold_c) / (previous_c - current_c)
+    return 0.0
+
+
 @dataclass(frozen=True)
 class ColdChainState:
     temperature_c: float
     elapsed_hours: float = 0.0
 
     def __post_init__(self):
-        if not math.isfinite(self.temperature_c) or not math.isfinite(self.elapsed_hours) or self.elapsed_hours < 0:
-            raise ValueError("temperature and elapsed time must be finite; elapsed time cannot be negative")
+        if not _finite_number(self.temperature_c) or not _finite_number(self.elapsed_hours) or self.elapsed_hours < 0:
+            raise ValueError("temperature and elapsed time must be finite numbers; elapsed time cannot be negative")
 
 
 @dataclass(frozen=True)
@@ -23,7 +42,7 @@ class SimulationResult:
 
 def step(state: ColdChainState, *, ambient_c: float, cooling_c_per_hour: float, thermal_rate: float = 0.20, dt_hours: float = 0.25) -> ColdChainState:
     values = (ambient_c, cooling_c_per_hour, thermal_rate, dt_hours)
-    if any(not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) for value in values):
+    if any(not _finite_number(value) for value in values):
         raise ValueError("thermal inputs must be finite numbers")
     if cooling_c_per_hour < 0 or thermal_rate < 0 or dt_hours <= 0:
         raise ValueError("cooling and thermal rate must be non-negative; dt_hours must be positive")
@@ -42,16 +61,15 @@ def simulate(
 ) -> SimulationResult:
     if not isinstance(ambient_profile, list):
         raise ValueError("ambient_profile must be a list of temperatures")
-    if not math.isfinite(dt_hours) or dt_hours <= 0:
-        raise ValueError("dt_hours must be finite and positive")
-    if not math.isfinite(cooling_c_per_hour) or cooling_c_per_hour < 0:
-        raise ValueError("cooling_c_per_hour must be finite and non-negative")
-    if not math.isfinite(initial_c) or not math.isfinite(max_allowed_c):
-        raise ValueError("initial and maximum allowed temperatures must be finite")
+    if not all(_finite_number(value) for value in (dt_hours, cooling_c_per_hour, initial_c, max_allowed_c)):
+        raise ValueError("simulation inputs must be finite numbers")
+    if dt_hours <= 0 or cooling_c_per_hour < 0:
+        raise ValueError("dt_hours must be positive and cooling_c_per_hour non-negative")
     state = ColdChainState(initial_c)
     states = [state]
     excursion = 0.0
     for ambient in ambient_profile:
+        previous_c = state.temperature_c
         state = step(
             state,
             ambient_c=ambient,
@@ -59,16 +77,7 @@ def simulate(
             dt_hours=dt_hours,
         )
         states.append(state)
-        previous_c = states[-2].temperature_c
-        current_c = state.temperature_c
-        # Estimate threshold-crossing time by linear interpolation within the
-        # discrete step instead of counting an entire interval from its endpoint.
-        if previous_c > max_allowed_c and current_c > max_allowed_c:
-            excursion += dt_hours
-        elif previous_c <= max_allowed_c < current_c:
-            excursion += dt_hours * (current_c - max_allowed_c) / (current_c - previous_c)
-        elif previous_c > max_allowed_c >= current_c:
-            excursion += dt_hours * (previous_c - max_allowed_c) / (previous_c - current_c)
+        excursion += threshold_excursion_hours(previous_c, state.temperature_c, max_allowed_c, dt_hours)
 
     return SimulationResult(
         states=tuple(states),
