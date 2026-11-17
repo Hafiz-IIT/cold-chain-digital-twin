@@ -32,6 +32,8 @@ class ColdChainTests(unittest.TestCase):
             step(ColdChainState(4), ambient_c=30, cooling_c_per_hour=0, dt_hours=0)
         with self.assertRaises(ValueError):
             simulate(4, [float("nan")], cooling_c_per_hour=0, max_allowed_c=8)
+        with self.assertRaises(ValueError):
+            simulate(4, [], cooling_c_per_hour=0, max_allowed_c=8, dt_hours=0)
 
 
 if __name__ == "__main__":
