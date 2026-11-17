@@ -17,6 +17,22 @@ class ColdChainTests(unittest.TestCase):
         result = simulate(4.0, [35.0] * 20, cooling_c_per_hour=0.0, max_allowed_c=8.0)
         self.assertGreater(result.excursion_hours, 0)
 
+    def test_threshold_crossing_is_interpolated_within_step(self):
+        result = simulate(
+            7.0, [40.0], cooling_c_per_hour=0.0,
+            max_allowed_c=8.0, dt_hours=1.0,
+        )
+        self.assertGreater(result.excursion_hours, 0.0)
+        self.assertLess(result.excursion_hours, 1.0)
+
+    def test_invalid_thermal_inputs_are_rejected(self):
+        with self.assertRaises(ValueError):
+            step(ColdChainState(4), ambient_c=30, cooling_c_per_hour=-1)
+        with self.assertRaises(ValueError):
+            step(ColdChainState(4), ambient_c=30, cooling_c_per_hour=0, dt_hours=0)
+        with self.assertRaises(ValueError):
+            simulate(4, [float("nan")], cooling_c_per_hour=0, max_allowed_c=8)
+
 
 if __name__ == "__main__":
     unittest.main()
