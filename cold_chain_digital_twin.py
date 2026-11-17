@@ -42,6 +42,10 @@ def simulate(
 ) -> SimulationResult:
     if not isinstance(ambient_profile, list):
         raise ValueError("ambient_profile must be a list of temperatures")
+    if not math.isfinite(dt_hours) or dt_hours <= 0:
+        raise ValueError("dt_hours must be finite and positive")
+    if not math.isfinite(cooling_c_per_hour) or cooling_c_per_hour < 0:
+        raise ValueError("cooling_c_per_hour must be finite and non-negative")
     if not math.isfinite(initial_c) or not math.isfinite(max_allowed_c):
         raise ValueError("initial and maximum allowed temperatures must be finite")
     state = ColdChainState(initial_c)
