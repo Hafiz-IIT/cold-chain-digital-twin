@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 
 @dataclass(frozen=True)
@@ -16,7 +17,29 @@ class SimulationResult:
     excursion_hours: float
 
 
+def _finite(name: str, value: float) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{name} must be finite") from None
+    if not isfinite(number):
+        raise ValueError(f"{name} must be finite")
+    return number
+
+
 def step(state: ColdChainState, *, ambient_c: float, cooling_c_per_hour: float, thermal_rate: float = 0.20, dt_hours: float = 0.25) -> ColdChainState:
+    _finite("state.temperature_c", state.temperature_c)
+    _finite("state.elapsed_hours", state.elapsed_hours)
+    ambient_c = _finite("ambient_c", ambient_c)
+    cooling_c_per_hour = _finite("cooling_c_per_hour", cooling_c_per_hour)
+    thermal_rate = _finite("thermal_rate", thermal_rate)
+    dt_hours = _finite("dt_hours", dt_hours)
+    if cooling_c_per_hour < 0:
+        raise ValueError("cooling_c_per_hour must be non-negative")
+    if thermal_rate < 0:
+        raise ValueError("thermal_rate must be non-negative")
+    if dt_hours <= 0:
+        raise ValueError("dt_hours must be positive")
     drift = thermal_rate * (ambient_c - state.temperature_c)
     next_temp = state.temperature_c + (drift - cooling_c_per_hour) * dt_hours
     return ColdChainState(next_temp, state.elapsed_hours + dt_hours)
@@ -30,6 +53,10 @@ def simulate(
     max_allowed_c: float,
     dt_hours: float = 0.25,
 ) -> SimulationResult:
+    initial_c = _finite("initial_c", initial_c)
+    max_allowed_c = _finite("max_allowed_c", max_allowed_c)
+    if not isinstance(ambient_profile, list):
+        raise ValueError("ambient_profile must be a list of temperatures")
     state = ColdChainState(initial_c)
     states = [state]
     excursion = 0.0
