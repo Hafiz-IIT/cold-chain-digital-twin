@@ -5,7 +5,12 @@ import math
 
 
 def _finite_number(value: object) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, TypeError, ValueError):
+        return False
 
 
 def threshold_excursion_hours(previous_c: float, current_c: float, threshold_c: float, dt_hours: float) -> float:
@@ -16,10 +21,18 @@ def threshold_excursion_hours(previous_c: float, current_c: float, threshold_c: 
         raise ValueError("dt_hours must be positive")
     if previous_c > threshold_c and current_c > threshold_c:
         return dt_hours
-    if previous_c <= threshold_c < current_c:
-        return dt_hours * (current_c - threshold_c) / (current_c - previous_c)
-    if previous_c > threshold_c >= current_c:
-        return dt_hours * (previous_c - threshold_c) / (previous_c - current_c)
+    scale = max(abs(previous_c), abs(current_c), abs(threshold_c))
+    if scale == 0:
+        return 0.0
+    previous_scaled = previous_c / scale
+    current_scaled = current_c / scale
+    threshold_scaled = threshold_c / scale
+    if previous_scaled <= threshold_scaled < current_scaled:
+        fraction = (current_scaled - threshold_scaled) / (current_scaled - previous_scaled)
+        return dt_hours * fraction
+    if previous_scaled > threshold_scaled >= current_scaled:
+        fraction = (previous_scaled - threshold_scaled) / (previous_scaled - current_scaled)
+        return dt_hours * fraction
     return 0.0
 
 
@@ -44,8 +57,12 @@ def step(state: ColdChainState, *, ambient_c: float, cooling_c_per_hour: float, 
     values = (ambient_c, cooling_c_per_hour, thermal_rate, dt_hours)
     if any(not _finite_number(value) for value in values):
         raise ValueError("thermal inputs must be finite numbers")
+    if not isinstance(state, ColdChainState):
+        raise TypeError("state must be a ColdChainState")
     if cooling_c_per_hour < 0 or thermal_rate < 0 or dt_hours <= 0:
         raise ValueError("cooling and thermal rate must be non-negative; dt_hours must be positive")
+    if not math.isfinite(thermal_rate * dt_hours) or thermal_rate * dt_hours > 1.0:
+        raise ValueError("thermal_rate * dt_hours must be <= 1 for a monotone explicit-Euler step")
     drift = thermal_rate * (ambient_c - state.temperature_c)
     next_temp = state.temperature_c + (drift - cooling_c_per_hour) * dt_hours
     return ColdChainState(next_temp, state.elapsed_hours + dt_hours)
@@ -78,11 +95,13 @@ def simulate(
         )
         states.append(state)
         excursion += threshold_excursion_hours(previous_c, state.temperature_c, max_allowed_c, dt_hours)
+        if not math.isfinite(excursion):
+            raise OverflowError("simulation excursion total is not finite")
 
     return SimulationResult(
         states=tuple(states),
         max_temperature_c=max(s.temperature_c for s in states),
-        excursion_hours=round(excursion, 6),
+        excursion_hours=excursion,
     )
 
 
