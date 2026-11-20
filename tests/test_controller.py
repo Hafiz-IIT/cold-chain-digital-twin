@@ -16,6 +16,10 @@ class ControllerTests(unittest.TestCase):
             0.0,
         )
 
+    def test_negative_deadband_is_rejected(self):
+        with self.assertRaises(ValueError):
+            thermostat_cooling(7.0, target_c=4.0, max_cooling_c_per_hour=3.0, deadband_c=-1.0)
+
     def test_control_reduces_hot_ambient_excursion(self):
         no_control = simulate_controlled(
             4.0, [35.0] * 40,
