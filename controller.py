@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 from cold_chain_digital_twin import ColdChainState, step
 
@@ -20,8 +21,11 @@ def thermostat_cooling(
     max_cooling_c_per_hour: float,
     deadband_c: float = 0.5,
 ) -> float:
-    if max_cooling_c_per_hour < 0:
-        raise ValueError("max cooling must be non-negative")
+    values = (temperature_c, target_c, max_cooling_c_per_hour, deadband_c)
+    if not all(isfinite(float(value)) for value in values):
+        raise ValueError("thermostat inputs must be finite")
+    if max_cooling_c_per_hour < 0 or deadband_c < 0:
+        raise ValueError("maximum cooling and deadband must be non-negative")
     return max_cooling_c_per_hour if temperature_c > target_c + deadband_c else 0.0
 
 
@@ -34,6 +38,8 @@ def simulate_controlled(
     max_cooling_c_per_hour: float,
     dt_hours: float = 0.25,
 ) -> ControlledResult:
+    if not isfinite(float(max_allowed_c)):
+        raise ValueError("max_allowed_c must be finite")
     state = ColdChainState(initial_c)
     states = [state]
     cooling_history: list[float] = []
