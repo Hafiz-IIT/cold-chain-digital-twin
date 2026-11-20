@@ -31,7 +31,7 @@ def thermostat_cooling(
         raise ValueError("thermostat inputs must be finite numbers")
     if max_cooling_c_per_hour < 0 or deadband_c < 0:
         raise ValueError("maximum cooling and deadband must be non-negative")
-    return max_cooling_c_per_hour if temperature_c > target_c + deadband_c else 0.0
+    return max_cooling_c_per_hour if temperature_c - target_c > deadband_c else 0.0
 
 
 def simulate_controlled(
@@ -81,5 +81,5 @@ def simulate_controlled(
         states=tuple(states),
         cooling_history=tuple(cooling_history),
         cooling_energy_proxy=energy,
-        excursion_hours=round(excursion, 6),
+        excursion_hours=excursion,
     )
