@@ -13,6 +13,16 @@ class ColdChainTests(unittest.TestCase):
         yes = step(ColdChainState(8.0), ambient_c=20.0, cooling_c_per_hour=4.0)
         self.assertLess(yes.temperature_c, no.temperature_c)
 
+    def test_negative_timestep_and_cooling_are_rejected(self):
+        with self.assertRaises(ValueError):
+            step(ColdChainState(4.0), ambient_c=30.0, cooling_c_per_hour=0.0, dt_hours=-0.25)
+        with self.assertRaises(ValueError):
+            step(ColdChainState(4.0), ambient_c=30.0, cooling_c_per_hour=-1.0)
+
+    def test_nonfinite_ambient_is_rejected(self):
+        with self.assertRaises(ValueError):
+            step(ColdChainState(4.0), ambient_c=float("nan"), cooling_c_per_hour=0.0)
+
     def test_excursion_is_tracked(self):
         result = simulate(4.0, [35.0] * 20, cooling_c_per_hour=0.0, max_allowed_c=8.0)
         self.assertGreater(result.excursion_hours, 0)
