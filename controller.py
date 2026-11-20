@@ -38,8 +38,11 @@ def simulate_controlled(
     max_cooling_c_per_hour: float,
     dt_hours: float = 0.25,
 ) -> ControlledResult:
-    if not isfinite(float(max_allowed_c)):
-        raise ValueError("max_allowed_c must be finite")
+    numeric_inputs = (initial_c, target_c, max_allowed_c, max_cooling_c_per_hour, dt_hours)
+    if not all(isfinite(float(value)) for value in numeric_inputs):
+        raise ValueError("controlled simulation inputs must be finite")
+    if max_cooling_c_per_hour < 0 or dt_hours <= 0:
+        raise ValueError("maximum cooling must be non-negative and dt_hours must be positive")
     state = ColdChainState(initial_c)
     states = [state]
     cooling_history: list[float] = []
