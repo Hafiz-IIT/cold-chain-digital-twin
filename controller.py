@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 from cold_chain_digital_twin import (
     ColdChainState,
@@ -73,6 +74,8 @@ def simulate_controlled(
         states.append(state)
         energy += cooling * dt_hours
         excursion += threshold_excursion_hours(previous_c, state.temperature_c, max_allowed_c, dt_hours)
+        if not math.isfinite(energy) or not math.isfinite(excursion):
+            raise OverflowError("controlled simulation totals are not finite")
 
     return ControlledResult(
         states=tuple(states),
